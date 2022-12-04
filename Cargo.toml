@@ -8,6 +8,3 @@ edition = "2021"
 [dependencies]
 
 [lib]
-
-[[bin]]
-name = "day1"
