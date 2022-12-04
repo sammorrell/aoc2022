@@ -31,7 +31,7 @@ mod tests {
 
     #[test]
     fn day1_part1() {
-        let file = File::open("data/day1/part1.txt").unwrap();
+        let file = File::open("data/day1/data.txt").unwrap();
         let lines: Vec<String> = BufReader::new(file).lines().into_iter().map(|l| l.unwrap()).collect();
         let mut elf_calories: Vec<Vec<i32>> = vec![];
         let mut curr_elf_cals: Vec<i32> = vec![];
@@ -56,7 +56,7 @@ mod tests {
 
     #[test]
     fn day1_part2() {
-        let file = File::open("data/day1/part1.txt").unwrap();
+        let file = File::open("data/day1/data.txt").unwrap();
         let lines: Vec<String> = BufReader::new(file).lines().into_iter().map(|l| l.unwrap()).collect();
         let mut elf_calories: Vec<Vec<i32>> = vec![];
         let mut curr_elf_cals: Vec<i32> = vec![];
