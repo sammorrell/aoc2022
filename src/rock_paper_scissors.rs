@@ -4,7 +4,7 @@ use std::{
     io::{BufReader, BufRead},
 };
 
-use crate::err::Error;
+use crate::{err::Error, read_two_string_cols};
 
 #[derive(Debug)]
 #[repr(u8)]
@@ -125,13 +125,11 @@ impl RPSGame {
 
 #[inline]
 pub fn load_game(path: &Path) -> Result<RPSGame, Error> {
-    let file = File::open(path)?;
-    let lines: Vec<String> = BufReader::new(file).lines().into_iter().map(|l| l.unwrap()).collect();
+    let (col1, col2) = read_two_string_cols::<' '>(path)?;
 
-    let rounds: Vec<(RockPaperScissors, RockPaperScissors)> = lines.iter().map(|line| {
-        let comps: Vec<&str> = line.split(" ").collect();
-        let p1 = RockPaperScissors::from_char(comps[0].chars().collect::<Vec<char>>()[0]).unwrap();
-        let p2 = RockPaperScissors::from_char(comps[1].chars().collect::<Vec<char>>()[0]).unwrap();
+    let rounds = col1.iter().zip(&col2).map(|(p1_str, p2_str)| {
+        let p1 = RockPaperScissors::from_char(p1_str.chars().collect::<Vec<char>>()[0]).unwrap();
+        let p2 = RockPaperScissors::from_char(p2_str.chars().collect::<Vec<char>>()[0]).unwrap();
 
         (p1, p2)
     }).collect();
@@ -141,13 +139,11 @@ pub fn load_game(path: &Path) -> Result<RPSGame, Error> {
 
 #[inline]
 pub fn load_p1_and_results(path: &Path) -> Result<RPSGame, Error> {
-    let file = File::open(path)?;
-    let lines: Vec<String> = BufReader::new(file).lines().into_iter().map(|l| l.unwrap()).collect();
+    let (col1, col2) = read_two_string_cols::<' '>(path)?;
 
-    let rounds: Vec<(RockPaperScissors, RockPaperScissors)> = lines.iter().map(|line| {
-        let comps: Vec<&str> = line.split(" ").collect();
-        let p1 = RockPaperScissors::from_char(comps[0].chars().collect::<Vec<char>>()[0]).unwrap();
-        let res = RPSResult::from_char(comps[1].chars().collect::<Vec<char>>()[0]).unwrap();
+    let rounds = col1.iter().zip(&col2).map(|(p1_str, res_str)| {
+        let p1 = RockPaperScissors::from_char(p1_str.chars().collect::<Vec<char>>()[0]).unwrap();
+        let res = RPSResult::from_char(res_str.chars().collect::<Vec<char>>()[0]).unwrap();
 
         let val = res.piece_offset() + p1.value();
         let p2: RockPaperScissors = (if val == 0 { 3 } else if val == 4 { 1 } else { val } as usize).into();
