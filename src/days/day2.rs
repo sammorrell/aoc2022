@@ -9,6 +9,9 @@ mod tests {
         let game = rps::load_game(Path::new("data/day2/data.txt")).unwrap();
         let (p1_score, p2_score) = game.tot_scores();
         println!("{}, {}", p1_score, p2_score);
+
+        // The answer provided by AOC. 
+        assert_eq!(p2_score, 12740);
     }
 
     #[test]
@@ -16,5 +19,8 @@ mod tests {
         let game = rps::load_p1_and_results(Path::new("data/day2/data.txt")).unwrap();
         let (p1_score, p2_score) = game.tot_scores();
         println!("{}, {}", p1_score, p2_score);
+
+        // The answer provided by AOC.
+        assert_eq!(p2_score, 11980);
     }
 }

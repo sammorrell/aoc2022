@@ -34,6 +34,9 @@ mod tests {
         // Now I search for the largest value and print it. 
         let maxval: i32 = elf_calories.iter().map(|cals| cals.iter().sum()).max().unwrap();
         print!("{}", maxval);
+
+        // The answer provided by AdventOfCode. 
+        assert_eq!(maxval, 72478);
     }
 
     #[test]
@@ -61,5 +64,8 @@ mod tests {
         sums.sort();
         let top3: i32 = sums.iter().rev().take(3).sum();
         println!("{}", top3);
+
+        // The answer provided by AdventOfCode. 
+        assert_eq!(top3, 210367);
     } 
 }
