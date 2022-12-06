@@ -10,7 +10,7 @@ mod tests {
         let (p1_score, p2_score) = game.tot_scores();
         println!("{}, {}", p1_score, p2_score);
 
-        // The answer provided by AOC. 
+        // The answer provided by AOC.
         assert_eq!(p2_score, 12740);
     }
 
