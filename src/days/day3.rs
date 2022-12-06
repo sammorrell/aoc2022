@@ -23,14 +23,7 @@ impl Rucksack {
     }
 
     pub fn items_in_all_compartments(&self) -> Vec<char> {
-        self.compartment_items.iter().map(|comp| comp.clone() ).fold(Vec::new(), |accum, comp| {
-            if accum.is_empty() {
-                comp.iter().map(|it| it.clone() ).collect::<Vec<char>>()
-            } else {
-                let comp_set = comp.clone().into_iter().collect::<HashSet<_>>();
-                comp_set.intersection(&accum.clone().into_iter().collect::<HashSet<_>>()).map(|it| it.clone()).collect::<Vec<char>>()
-            }
-        }).to_vec()
+        common_items(&self.compartment_items)
     }
 }
 
