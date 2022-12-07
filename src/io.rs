@@ -31,7 +31,7 @@ pub fn read_two_string_cols<const SEPARATOR: char>(
         .iter()
         .map(|line| {
             let cols: Vec<&str> = line.split(SEPARATOR).map(|col| col.trim()).collect();
-            assert!(cols.len() == 2);
+            assert_eq!(cols.len(), 2);
             (String::from(cols[0]), String::from(cols[1]))
         })
         .unzip();
