@@ -1,7 +1,6 @@
 #[cfg(test)]
 mod tests {
     use crate::io;
-    use itertools::{self, Itertools};
     use std::path::Path;
 
     #[test]

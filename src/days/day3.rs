@@ -1,7 +1,5 @@
 use std::collections::HashSet;
 
-use crate::io::read_string_col;
-
 #[derive(Debug, PartialEq, PartialOrd)]
 pub struct Rucksack {
     pub compartment_items: Vec<Vec<char>>,
@@ -59,7 +57,7 @@ pub fn item_priority(item: &char) -> usize {
 mod tests {
     use super::{total_priority, Rucksack};
     use crate::{days::day3::common_items, read_string_col};
-    use std::{collections::HashSet, path::Path};
+    use std::path::Path;
 
     #[test]
     fn day3_part1() {

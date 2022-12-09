@@ -29,7 +29,7 @@ mod tests {
                     .into_iter()
                     .collect_tuple()
                     .unwrap();
-                (components.0..components.1)
+                components.0..components.1
             })
             .collect();
 
@@ -42,7 +42,7 @@ mod tests {
                     .into_iter()
                     .collect_tuple()
                     .unwrap();
-                (components.0..components.1)
+                components.0..components.1
             })
             .collect();
 
@@ -75,7 +75,7 @@ mod tests {
                     .into_iter()
                     .collect_tuple()
                     .unwrap();
-                (components.0..components.1)
+                components.0..components.1
             })
             .collect();
 
@@ -88,7 +88,7 @@ mod tests {
                     .into_iter()
                     .collect_tuple()
                     .unwrap();
-                (components.0..components.1)
+                components.0..components.1
             })
             .collect();
 
@@ -121,7 +121,7 @@ mod tests {
                     .into_iter()
                     .collect_tuple()
                     .unwrap();
-                (components.0..components.1)
+                components.0..components.1
             })
             .collect();
 
@@ -134,7 +134,7 @@ mod tests {
                     .into_iter()
                     .collect_tuple()
                     .unwrap();
-                (components.0..components.1)
+                components.0..components.1
             })
             .collect();
 

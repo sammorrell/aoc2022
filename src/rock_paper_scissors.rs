@@ -1,9 +1,4 @@
-use std::{
-    fs::File,
-    io::{BufRead, BufReader},
-    path::Path,
-};
-
+use std::path::Path;
 use crate::{err::Error, read_two_string_cols};
 
 #[derive(Debug)]
@@ -45,7 +40,6 @@ impl RockPaperScissors {
                 other.value() + RPSResult::Draw.value(),
             )
         } else {
-            let test = (-1.0_f64).powi(diff).round();
             let check_val =
                 (diff.signum() as f64 * ((-1.0_f64).powi(diff).round() * -1_f64)) as i32;
 
