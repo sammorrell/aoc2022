@@ -31,7 +31,10 @@ impl TreeItem {
 
     pub fn size(&self) -> usize {
         match self {
-            Self::Directory { name: _, ref children } => children.iter().map(Self::size).sum(),
+            Self::Directory {
+                name: _,
+                ref children,
+            } => children.iter().map(Self::size).sum(),
             Self::File { name: _, ref size } => size.clone(),
         }
     }
@@ -83,12 +86,52 @@ impl TreeItem {
         }
     }
 
-    pub fn find_total_size(&self, target_size: usize) -> Vec<&TreeItem> {
+    pub fn find_dirs_smaller_than(&self, target_size: usize) -> Vec<&TreeItem> {
         match self {
-            Self::Directory { name: _, ref children } => {
-                let this_dir = if self.size() <= target_size { vec![self] } else { vec![] };
-                [this_dir, children.iter().map(|item| item.find_total_size(target_size)).flatten().collect::<Vec<&TreeItem>>()].concat()
-            },
+            Self::Directory {
+                name: _,
+                ref children,
+            } => {
+                let this_dir = if self.size() <= target_size {
+                    vec![self]
+                } else {
+                    vec![]
+                };
+                [
+                    this_dir,
+                    children
+                        .iter()
+                        .map(|item| item.find_dirs_smaller_than(target_size))
+                        .flatten()
+                        .collect::<Vec<&TreeItem>>(),
+                ]
+                .concat()
+            }
+            Self::File { name: _, size: _ } => vec![],
+        }
+    }
+
+    pub fn find_dirs_larger_than(&self, target_size: usize) -> Vec<&TreeItem> {
+        match self {
+            Self::Directory {
+                name: _,
+                ref children,
+            } => {
+                let this_dir = if self.size() >= target_size {
+                    vec![self]
+                } else {
+                    vec![]
+                };
+                [
+                    this_dir,
+                    children
+                        .iter()
+                        .map(|item| item.find_dirs_larger_than(target_size))
+                        .flatten()
+                        .collect::<Vec<&TreeItem>>(),
+                ]
+                .concat()
+            }
             Self::File { name: _, size: _ } => vec![],
         }
     }
@@ -153,11 +196,11 @@ mod tests {
         let lines = read_string_col(Path::new("data/day7/example.txt")).expect("Empty file. ");
         let tokens = tokenise_vec(&lines);
         let tree = parse_tree_from_tokens(&tokens);
-        
-        // Check that the total size is correct. 
+
+        // Check that the total size is correct.
         assert_eq!(tree.size(), 48381165);
 
-        let found_dirs = tree.find_total_size(100_000);
+        let found_dirs = tree.find_dirs_smaller_than(100_000);
         let found_dirs_sum: usize = found_dirs.into_iter().map(TreeItem::size).sum();
         assert_eq!(found_dirs_sum, 94853 + 584);
     }
@@ -168,8 +211,27 @@ mod tests {
         let tokens = tokenise_vec(&lines);
         let tree = parse_tree_from_tokens(&tokens);
 
-        let found_dirs = tree.find_total_size(100_000);
+        let found_dirs = tree.find_dirs_smaller_than(100_000);
         let found_dirs_sum: usize = found_dirs.into_iter().map(TreeItem::size).sum();
         assert_eq!(found_dirs_sum, 584);
+    }
+
+    #[test]
+    pub fn day7_part2() {
+        const TOTAL_AVAILABLE_SPACE: usize = 70_000_000;
+        const REQUIERED_SPACE: usize = 30_000_000;
+
+        let lines = read_string_col(Path::new("data/day7/data.txt")).expect("Empty file. ");
+        let tokens = tokenise_vec(&lines);
+        let tree = parse_tree_from_tokens(&tokens);
+        let used_space = tree.size();
+        let currently_remaining_space = TOTAL_AVAILABLE_SPACE - used_space;
+
+        let found_dirs = tree.find_dirs_larger_than((REQUIERED_SPACE - currently_remaining_space));
+        let mut found_dirs_size: Vec<usize> = found_dirs.into_iter().map(TreeItem::size).collect();
+        found_dirs_size.sort();
+        let result = found_dirs_size.first().expect("No results found. ");
+
+        assert_eq!(*result, 5883165);
     }
 }
