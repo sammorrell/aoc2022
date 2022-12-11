@@ -137,7 +137,7 @@ impl TreeItem {
     }
 }
 
-fn tokenise_vec(str_vec: &Vec<String>) -> Vec<Token> {
+pub fn tokenise_vec(str_vec: &Vec<String>) -> Vec<Token> {
     str_vec
         .iter()
         .map(|line| {
@@ -168,7 +168,7 @@ fn tokenise_vec(str_vec: &Vec<String>) -> Vec<Token> {
         .collect()
 }
 
-fn parse_tree_from_tokens(tokens: &Vec<Token>) -> TreeItem {
+pub fn parse_tree_from_tokens(tokens: &Vec<Token>) -> TreeItem {
     let mut tok_vec = VecDeque::from(tokens.clone());
 
     // Check that we have the root node in the first position.
@@ -227,7 +227,7 @@ mod tests {
         let used_space = tree.size();
         let currently_remaining_space = TOTAL_AVAILABLE_SPACE - used_space;
 
-        let found_dirs = tree.find_dirs_larger_than((REQUIERED_SPACE - currently_remaining_space));
+        let found_dirs = tree.find_dirs_larger_than(REQUIERED_SPACE - currently_remaining_space);
         let mut found_dirs_size: Vec<usize> = found_dirs.into_iter().map(TreeItem::size).collect();
         found_dirs_size.sort();
         let result = found_dirs_size.first().expect("No results found. ");
