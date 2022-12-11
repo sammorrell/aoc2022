@@ -1,5 +1,5 @@
-use std::path::Path;
 use crate::{err::Error, read_two_string_cols};
+use std::path::Path;
 
 #[derive(Debug)]
 #[repr(u8)]
