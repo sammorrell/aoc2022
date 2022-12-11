@@ -213,7 +213,7 @@ mod tests {
 
         let found_dirs = tree.find_dirs_smaller_than(100_000);
         let found_dirs_sum: usize = found_dirs.into_iter().map(TreeItem::size).sum();
-        assert_eq!(found_dirs_sum, 584);
+        assert_eq!(found_dirs_sum, 2104783);
     }
 
     #[test]
