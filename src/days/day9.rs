@@ -52,7 +52,7 @@ impl Motion {
         let unit_vec = self.dir.unit_vector();
         for _ in 0..self.steps {
             rope.head += unit_vec;
-            rope.tail_follow_head();
+            rope.follow_head();
 
             // Now check to see if head position is already in visited heads.
             if !grid.visited_head.contains(&rope.head) {
@@ -60,8 +60,9 @@ impl Motion {
             }
 
             // Now check the visited tails to see if the location already exists.
-            if !grid.visited_tail.contains(&rope.tail) {
-                grid.visited_tail.push(rope.tail.clone());
+            let last_knot = rope.knots.last().expect("No knots in the rope. ");
+            if !grid.visited_tail.contains(&last_knot) {
+                grid.visited_tail.push(last_knot.clone());
             }
         }
     }
@@ -70,12 +71,16 @@ impl Motion {
 #[derive(Default)]
 pub struct Rope {
     pub head: Vec2,
-    pub tail: Vec2,
+    pub knots: Vec<Vec2>,
 }
 
 impl Rope {
-    pub fn new() -> Self {
+    pub fn new(n_knots: usize) -> Self {
         Rope {
+            knots: (0..n_knots)
+                .into_iter()
+                .map(|_| Vec2::new(0.0, 0.0))
+                .collect(),
             ..Default::default()
         }
     }
@@ -92,11 +97,21 @@ impl Rope {
         })
     }
 
-    pub fn tail_follow_head(&mut self) {
-        let diff = self.head - self.tail;
+    pub fn follow_head(&mut self) {
+        // First move the first knot forward.
+        let diff = self.head - self.knots[0];
         if diff.norm() > 2.0_f64.sqrt() {
             let translate = Self::diff_to_motion(diff);
-            self.tail += translate;
+            self.knots[0] += translate;
+        }
+
+        // Now move the remaining tail elements forward, if that exists.
+        for i in 1..self.knots.len() {
+            let diff = self.knots[i - 1] - self.knots[i];
+            if diff.norm() > 2.0_f64.sqrt() {
+                let translate = Self::diff_to_motion(diff);
+                self.knots[i] += translate;
+            }
         }
     }
 }
@@ -143,9 +158,7 @@ mod tests {
         let input =
             io::read_string_col(Path::new("data/day9/example.txt")).expect("No lines in input. ");
         let motions = parse_motions(&input);
-        let mut rope = Rope::new();
-        //rope.head = Vec2::new(4.0, 0.0);
-        //rope.tail = Vec2::new(4.0, 0.0);
+        let mut rope = Rope::new(1);
         let mut grid = Grid::new(5, 6);
 
         for m in motions {
@@ -160,9 +173,7 @@ mod tests {
         let input =
             io::read_string_col(Path::new("data/day9/data.txt")).expect("No lines in input. ");
         let motions = parse_motions(&input);
-        let mut rope = Rope::new();
-        //rope.head = Vec2::new(4.0, 0.0);
-        //rope.tail = Vec2::new(4.0, 0.0);
+        let mut rope = Rope::new(1);
         let mut grid = Grid::new(5, 6);
 
         for m in motions {
@@ -170,5 +181,20 @@ mod tests {
         }
 
         assert_eq!(grid.unique_tail_visits(), 6284);
+    }
+
+    #[test]
+    pub fn day9_part2() {
+        let input =
+            io::read_string_col(Path::new("data/day9/data.txt")).expect("No lines in input. ");
+        let motions = parse_motions(&input);
+        let mut rope = Rope::new(9);
+        let mut grid = Grid::new(5, 6);
+
+        for m in motions {
+            m.move_head(&mut rope, &mut grid);
+        }
+
+        assert_eq!(grid.unique_tail_visits(), 2661);
     }
 }
