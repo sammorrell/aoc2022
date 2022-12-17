@@ -1,19 +1,17 @@
 use std::collections::VecDeque;
-
-use itertools::Itertools;
 use regex::Regex;
 
 const MONKEY_PATTERN: &str = r"Monkey ([0-9]+):\n  Starting items: ([\d, ]+)\n  Operation: ([=\-*/+ \w\d]+)\n  Test: ([ \w\d]+)\n    If true: throw to monkey ([\d]+)\n    If false: throw to monkey ([\d]+)";
 
 #[derive(Debug, Default)]
 pub struct Monkey {
-    id: usize,
-    items: VecDeque<i128>,
-    operation: Operation,
-    test_divisible: i128,
-    false_target: usize,
-    true_target: usize,
-    inspections: usize,
+    pub id: usize,
+    pub items: VecDeque<i64>,
+    pub operation: Operation,
+    pub test_divisible: i64,
+    pub false_target: usize,
+    pub true_target: usize,
+    pub inspections: usize,
 }
 
 impl Monkey {
@@ -26,8 +24,8 @@ impl Monkey {
 
 #[derive(Debug, Default)]
 pub enum Operation {
-    AddNum(i128),
-    MulNum(i128),
+    AddNum(i64),
+    MulNum(i64),
     #[default]
     AddOld,
     MulOld,
@@ -46,7 +44,7 @@ impl Operation {
                 Operation::MulOld
             }
         } else {
-            let val = operand.parse::<i128>().expect("The operator should be a number. ");
+            let val = operand.parse::<i64>().expect("The operator should be a number. ");
             if operator == "+" {
                 Operation::AddNum(val)
             } else {
@@ -55,12 +53,12 @@ impl Operation {
         }
     }
 
-    pub fn apply(&self, item_val: i128) -> i128 {
+    pub fn apply(&self, item_val: i64) -> i64 {
         match self {
-            Self::AddOld => item_val + item_val,
-            Self::MulOld => item_val * item_val,
-            Self::AddNum(ref num) => item_val + num,
-            Self::MulNum(ref num) => item_val * num,
+            Self::AddOld => item_val+ item_val,
+            Self::MulOld => item_val* item_val,
+            Self::AddNum(ref num) => item_val+ num,
+            Self::MulNum(ref num) => item_val* num,
         }
     }
 }
@@ -75,16 +73,16 @@ pub fn monkeys_from_string(string: &String) -> Vec<Monkey> {
         .into_iter()
         .map(|cap| {
             let id = cap[1].parse::<usize>().expect("No ID for monkey. ");
-            let items: VecDeque<i128> = cap[2]
+            let items: VecDeque<i64> = cap[2]
                 .split(",")
                 .map(|item| {
                     item.trim()
-                        .parse::<i128>()
+                        .parse::<i64>()
                         .expect("Unable to parse int from item. ")
                 })
                 .collect();
             let operation = Operation::from_string(&cap[3]);
-            let test_divisible = cap[4].split(" ").nth(2).unwrap().parse::<i128>().unwrap();
+            let test_divisible = cap[4].split(" ").nth(2).unwrap().parse::<i64>().unwrap();
             let true_target = cap[5].parse::<usize>().unwrap();
             let false_target = cap[6].parse::<usize>().unwrap();
 
@@ -113,7 +111,7 @@ mod tests {
             io::read_string(Path::new("data/day11/example.txt")).expect("Unable to find input. ");
         let mut monkies = monkeys_from_string(&input_string);
         
-        for iround in 0..20 {
+        for _ in 0..20 {
             for imonkey in 0..monkies.len() {
                 // First, do a pass over to test the monkies. 
                 let mut inspec = 0;
@@ -149,7 +147,7 @@ mod tests {
             io::read_string(Path::new("data/day11/data.txt")).expect("Unable to find input. ");
         let mut monkies = monkeys_from_string(&input_string);
         
-        for iround in 0..20 {
+        for _ in 0..20 {
             for imonkey in 0..monkies.len() {
                 // First, do a pass over to test the monkies. 
                 let mut inspec = 0;
@@ -178,5 +176,48 @@ mod tests {
         let top2_inspections = inspections.into_iter().rev().take(2).collect::<Vec<usize>>();
         // The answer provided by AOC. 
         assert_eq!(top2_inspections[0] * top2_inspections[1], 51075);
+    }
+
+    #[test]
+    pub fn day11_part2() {
+        let input_string =
+            io::read_string(Path::new("data/day11/data.txt")).expect("Unable to find input. ");
+        let mut monkies = monkeys_from_string(&input_string);
+        
+        // For this solution, we are going to use the least common multiple for this. 
+        // When we apply the operation, we divide by the product of moduli to ensure that we don't 
+        // while still getting the correct modulus from the tests. 
+        let modproduct: i64 = monkies.iter().map(|m| m.test_divisible).product();
+        println!("{}", modproduct);
+        
+        for _ in 0..10_000 {
+            for imonkey in 0..monkies.len() {
+                // First, do a pass over to test the monkies. 
+                let mut inspec = 0;
+                monkies[imonkey].items = monkies[imonkey].items.iter().map(|item| { 
+                    inspec += 1;
+                    monkies[imonkey].operation.apply(*item % modproduct)
+                }).collect();
+
+                monkies[imonkey].inspections += inspec;
+
+                // Now check the items
+                while let Some(item) = monkies[imonkey].items.pop_front() {
+                    if item % monkies[imonkey].test_divisible == 0 {
+                        let itar = monkies[imonkey].true_target;
+                        monkies[itar].items.push_back(item);
+                    } else {
+                        let itar = monkies[imonkey].false_target;
+                        monkies[itar].items.push_back(item);
+                    }
+                }
+            }
+        }
+
+        let mut inspections: Vec<usize> = monkies.iter().map(|monk| monk.inspections).collect();
+        inspections.sort();
+        let top2_inspections = inspections.into_iter().rev().take(2).collect::<Vec<usize>>();
+        // The answer provided by AOC. 
+        assert_eq!(top2_inspections[0] * top2_inspections[1], 11741456163);
     }
 }
