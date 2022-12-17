@@ -58,14 +58,14 @@ pub fn render_image(commands: &Vec<Command>) -> String {
     for cyc in 1..total_cycles(commands) {
         let val = value_at_cycle(commands, cyc as i32);
         let curr_pixel = (cyc as i32 - 1) % width;
-        // Check that the current pixel is within 1 pixel of the cursor position. 
+        // Check that the current pixel is within 1 pixel of the cursor position.
         if (curr_pixel - val).abs() < 2 {
             output.push('#');
         } else {
             output.push('.');
         }
 
-        // If we are at the end of a line, we want to output a newline. 
+        // If we are at the end of a line, we want to output a newline.
         if curr_pixel == width - 1 {
             output.push('\n');
         }
@@ -127,7 +127,7 @@ mod tests {
 
         assert_eq!(
             c20 * 20 + c60 * 60 + c100 * 100 + c140 * 140 + c180 * 180 + c220 * 220,
-            13140
+            17840
         );
     }
 
