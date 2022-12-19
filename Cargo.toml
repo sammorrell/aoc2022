@@ -11,5 +11,7 @@ regex = "1.7.*"
 nalgebra = "0.31.*"
 ndarray = "0.15.*"
 property = "0.3.*"
+rayon = "1.6"
+indicatif = {version = "*", features = ["rayon"]}
 
 [lib]

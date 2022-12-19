@@ -1,6 +1,9 @@
 // This one I got stuck on, as I have not done decision maths for quite a while.
 // However I looked through the other solutions and was inspired by:
 // https://github.com/frjonsen/aoc2022/blob/master/day12/part2/src/main.rs#L211
+//
+// Also a big thank you to Red Blob Games for a great write-up of pathfinding algorithms:
+// https://www.redblobgames.com/pathfinding/a-star/introduction.html
 
 use std::{ops::{Add, Sub}, rc::Rc};
 use property::Property;
@@ -121,6 +124,18 @@ impl Grid {
 
         panic!("Unable to find end node. ")
     }
+
+    pub fn coords_at_elevation(&self, elev: u8) -> Vec<Coord> {
+        let mut found_coords = vec![];
+        for (i, row) in self.data.iter().enumerate() {
+            for (j, node) in row.iter().enumerate() {
+                if <i32 as From<GridNode>>::from(*node) as u8 == elev {
+                    found_coords.push(Coord(i, j));
+                }
+            }
+        }
+        found_coords
+    }
 }
 
 #[derive(Clone, Debug)]
@@ -148,20 +163,21 @@ impl PartialEq for Node {
 }
 
 pub fn can_step(curr_coord: &Coord, next_coord: &Coord, grid: &Grid) -> bool {
-    let height_diff = grid.data()[next_coord.1][next_coord.0] - grid.data()[curr_coord.1][curr_coord.0];
+    let height_diff = grid.data()[next_coord.0][next_coord.1] - grid.data()[curr_coord.0][curr_coord.1];
     height_diff <= 1
 }
 
-pub fn find_path_with_a_star(grid: &Grid, start: &Coord, end: &Coord) -> Option<Vec<Coord>> {
-    let mut open_list: Vec<Rc<Node>> = vec![];
+pub fn find_path_with_a_star(grid: &Grid, start: &Coord, end: Vec<Coord>) -> Option<Vec<Coord>> {
+    let mut frontier: Vec<Rc<Node>> = vec![];
     let mut came_from: Vec<Rc<Node>> = vec![];
 
     // Push the starting point onto the closed list to begin. 
     let start_node = Node::new(None, start);
-    open_list.push(Rc::new(start_node));
+    frontier.push(Rc::new(start_node));
 
-    while !open_list.is_empty() {
-        let (current_node_idx, _) = open_list
+    while !frontier.is_empty() {
+        // Get the next highest priority in the queue of frontier nodes. 
+        let (next_idx, _) = frontier
             .iter()
             .enumerate()
             .min_by_key(|(_, node)| node.f() )
@@ -169,13 +185,13 @@ pub fn find_path_with_a_star(grid: &Grid, start: &Coord, end: &Coord) -> Option<
 
         // Remove current node from open list. 
         let curr_node = {
-            let curr_node = open_list.swap_remove(current_node_idx);
+            let curr_node = frontier.swap_remove(next_idx);
             came_from.push(curr_node);
             came_from.last().unwrap()
         };
 
         // Test to see if we are done. 
-        if curr_node.coord == *end {
+        if end.contains(&curr_node.coord) {
             let mut final_path = vec![];
             let mut curr = curr_node.clone();
             while curr.parent.is_some() {
@@ -192,45 +208,99 @@ pub fn find_path_with_a_star(grid: &Grid, start: &Coord, end: &Coord) -> Option<
                 Rc::new(
                     Node {
                         parent: Some(curr_node.clone()),
-                        h: end.0.abs_diff(neigh.0) + end.1.abs_diff(neigh.1),
+                        // Heuristic is the distance to the goal. 
+                        h: end.first().unwrap().0.abs_diff(neigh.0) +  end.first().unwrap().1.abs_diff(neigh.1),
                         coord: neigh,
+                        // Cost is the distance from the original starting point.
+                        // As this is a single step each time, we update accordingly. 
                         g: curr_node.g + 1,
                     }
                 )
             });
 
         for neighbour in neighbours {
-            println!("{:?}", neighbour);
+            // Check to see if we have already visisted this neighbour in our journey. 
             if came_from.contains(&neighbour) { continue; }
             
-            for point in open_list.iter() {
+            for point in frontier.iter() {
+                // Check to see if there is a lower cost alternative alreadt in the frontier. 
                 if point.coord == neighbour.coord && neighbour.g > point.g {
                     continue;
                 }
             }
-            open_list.push(neighbour);
+
+            frontier.push(neighbour);
         }
     };
 
+    // If we reach this point, something has gone wrong. 
     None
 }
 
 #[cfg(test)]
 mod tests {
+    use rayon::prelude::*;
+
     use crate::days::day12::find_path_with_a_star;
-
     use super::Grid;
-
 
     #[test]
     pub fn day12_example() {
         let grid = Grid::from_string(include_str!("../../data/day12/example.txt"));
         let start_coord = grid.start_coord();
-        let end_coord = grid.end_coord();
-        println!("{:?} -> {:?}", start_coord, end_coord);
-        println!("{:?}", grid.data());
+        let end_coord = vec![grid.end_coord()];
 
-        let route = find_path_with_a_star(&grid, &start_coord, &end_coord).unwrap();
+        let route = find_path_with_a_star(&grid, &start_coord, end_coord).unwrap();
         assert_eq!(route.len(), 31);
+    }
+
+    #[test]
+    #[ignore]
+    pub fn day12_part1() {
+        let grid = Grid::from_string(include_str!("../../data/day12/data.txt"));
+        let start_coord = grid.start_coord();
+        let end_coord = vec![grid.end_coord()];
+
+        let route = find_path_with_a_star(&grid, &start_coord, end_coord).unwrap();
+        assert_eq!(route.len(), 517);
+    }
+
+    #[test]
+    pub fn day12_example2() {
+        let grid = Grid::from_string(include_str!("../../data/day12/example.txt"));
+        let start_coords = grid.coords_at_elevation(0);
+        let end_coord = vec![grid.end_coord()];
+
+        let route_lengths: Vec<usize> = start_coords.iter().map(|start| {
+            match find_path_with_a_star(&grid, &start, end_coord.clone()) {
+                Some(vec) => vec.len(),
+                None => usize::MAX
+            }
+        }).collect();
+        let shortest_route = route_lengths.into_iter().fold(usize::MAX, |accum, val| accum.min(val) );
+
+        assert_eq!(shortest_route, 29);
+    }
+
+    // This appears to be a working solution for it, however it takes too long to actually run.
+    // I think there is an issue with the A* implementation, as the  algorithm took about 46 minutes to run for a single. 
+    // So, some refinements to make. In particular, flip this around and adopt a Dijkstra's approach to this in order to
+    // find the closest route to all of the available end points. 
+    #[test]
+    #[ignore]
+    pub fn day12_part2() {
+        let grid = Grid::from_string(include_str!("../../data/day12/data.txt"));
+        let start_coords = grid.coords_at_elevation(0);
+        let end_coord = vec![grid.end_coord()];
+
+        let route_lengths: Vec<usize> = start_coords.iter().map(|start| {
+            match find_path_with_a_star(&grid, &start, end_coord.clone()) {
+                Some(vec) => vec.len(),
+                None => usize::MAX
+            }
+        }).collect();
+        let shortest_route = route_lengths.into_iter().fold(usize::MAX, |accum, val| accum.min(val) );
+
+        assert_eq!(shortest_route, 29);
     }
 }
