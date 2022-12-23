@@ -3,7 +3,7 @@ use serde_derive::{Deserialize, Serialize};
 use serde_json as json;
 use crate::io::read_text_chunks;
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(untagged)]
 pub enum PacketItem {
     Integer(usize),
@@ -18,6 +18,21 @@ pub fn parse_input(input_file: &Path) -> Vec<(PacketItem, PacketItem)> {
         (left, right)
     })
     .collect()
+}
+
+/// Checks to see whether the current PacketItem is our divider item. 
+pub fn is_decoder_packet(packet: &PacketItem) -> bool {
+    const DIVIER_INTS: [usize; 2] = [2_usize, 6_usize];
+    if let PacketItem::List(layer1) = packet {
+        if let Some(PacketItem::List(layer2)) = layer1.first() {
+            if let Some(PacketItem::Integer(intval)) = layer2.first() {
+                if layer1.len() == 1 && layer2.len() == 1 && DIVIER_INTS.contains(intval) {
+                    return true
+                }
+            }
+        }
+    }
+    false
 }
 
 pub fn in_correct_order(left: &PacketItem, right: &PacketItem) -> Option<bool> {
@@ -65,6 +80,10 @@ pub fn in_correct_order(left: &PacketItem, right: &PacketItem) -> Option<bool> {
 
 #[cfg(test)]
 mod tests {
+    use serde_json::map;
+
+    use crate::days::day13::{PacketItem, is_decoder_packet};
+
     use super::{parse_input, in_correct_order};
     use std::path::Path;
 
@@ -106,5 +125,107 @@ mod tests {
         
         let index_sum: usize = indices.iter().sum();
         assert_eq!(index_sum, 5623);
+    }
+
+    #[test]
+    fn day13_part2_example() {
+        let packet_pairs = parse_input(Path::new("data/day13/example.txt"));
+        let divider_packets: Vec<PacketItem> = parse_input(Path::new("data/day13/divider_packets.txt"))
+            .into_iter()
+            .map(|(r, l)| vec![r, l])
+            .flatten()
+            .collect();
+
+        let mut packets: Vec<PacketItem> = packet_pairs
+            .into_iter()
+            .map(|(r, l)| vec![r, l])
+            .flatten()
+            .chain(divider_packets)
+            .collect();
+
+        // Let's do a bubble sort with the testing code we just wrote. 
+        let n_packet = packets.len();
+        for i in 0..(n_packet - 1) {
+            for j in 0..(n_packet - i - 1) {
+                match in_correct_order(&packets[j], &packets[j + 1]) {
+                    Some(test) => {
+                        if !test {
+                            packets.swap(j, j+1);
+                        }
+                    },
+                    None => panic!("What do I do!?")
+                }
+            }
+        }
+        
+        // Now find the divider packets
+        let decoder_key: usize = packets
+            .iter()
+            .enumerate()
+            .map(|(idx, packet)| {
+                if is_decoder_packet(packet) {
+                    Some(idx + 1)
+                } else {
+                    None
+                }
+            })
+            .filter(Option::is_some)
+            .map(|val| {
+                val.unwrap()
+            })
+            .product();
+
+            assert_eq!(decoder_key, 140);
+    }
+
+    #[test]
+    fn day13_part2() {
+        let packet_pairs = parse_input(Path::new("data/day13/data.txt"));
+        let divider_packets: Vec<PacketItem> = parse_input(Path::new("data/day13/divider_packets.txt"))
+            .into_iter()
+            .map(|(r, l)| vec![r, l])
+            .flatten()
+            .collect();
+
+        let mut packets: Vec<PacketItem> = packet_pairs
+            .into_iter()
+            .map(|(r, l)| vec![r, l])
+            .flatten()
+            .chain(divider_packets)
+            .collect();
+
+        // Let's do a bubble sort with the testing code we just wrote. 
+        let n_packet = packets.len();
+        for i in 0..(n_packet - 1) {
+            for j in 0..(n_packet - i - 1) {
+                match in_correct_order(&packets[j], &packets[j + 1]) {
+                    Some(test) => {
+                        if !test {
+                            packets.swap(j, j+1);
+                        }
+                    },
+                    None => panic!("What do I do!?")
+                }
+            }
+        }
+        
+        // Now find the divider packets
+        let decoder_key: usize = packets
+            .iter()
+            .enumerate()
+            .map(|(idx, packet)| {
+                if is_decoder_packet(packet) {
+                    Some(idx + 1)
+                } else {
+                    None
+                }
+            })
+            .filter(Option::is_some)
+            .map(|val| {
+                val.unwrap()
+            })
+            .product();
+
+            assert_eq!(decoder_key, 20570);
     }
 }
