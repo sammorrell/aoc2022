@@ -1,5 +1,5 @@
 use itertools::Itertools;
-use std::cmp::{min, max};
+use std::cmp::{max, min};
 
 use crate::io::read_string_col;
 use std::path::Path;
@@ -7,18 +7,25 @@ const CAVE_DIMS: (usize, usize) = (1000, 1000);
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum CavePoint {
-    Air, 
-    Rock, 
+    Air,
+    Rock,
     Sand,
 }
 
 pub fn parse_coords_set(instr: &String) -> Vec<(usize, usize)> {
-    instr.split("->")
+    instr
+        .split("->")
         .into_iter()
         .map(|segment_str| {
             let segs: Vec<&str> = segment_str.split(",").collect();
-            let x = segs[0].trim().parse::<usize>().expect("Unable to parse x-coordinate. ");
-            let y = segs[1].trim().parse::<usize>().expect("Unable to parse x-coordinate. ");
+            let x = segs[0]
+                .trim()
+                .parse::<usize>()
+                .expect("Unable to parse x-coordinate. ");
+            let y = segs[1]
+                .trim()
+                .parse::<usize>()
+                .expect("Unable to parse x-coordinate. ");
             (y, x)
         })
         .collect()
@@ -26,9 +33,7 @@ pub fn parse_coords_set(instr: &String) -> Vec<(usize, usize)> {
 
 pub fn make_cave(rocks_path: &Path) -> Vec<Vec<CavePoint>> {
     let mut cave: Vec<Vec<CavePoint>> = (0..CAVE_DIMS.0)
-        .map(|i| {
-            (0..CAVE_DIMS.1).map(|j| CavePoint::Air).collect()
-        })
+        .map(|i| (0..CAVE_DIMS.1).map(|j| CavePoint::Air).collect())
         .collect();
 
     for rock_str in read_string_col(rocks_path).expect("Unable to load rocks from file. ") {
@@ -44,9 +49,9 @@ pub fn make_cave(rocks_path: &Path) -> Vec<Vec<CavePoint>> {
             }
             cave[prev.0][prev.1] = CavePoint::Rock;
             cave[curr.0][curr.1] = CavePoint::Rock;
-        };
+        }
     }
-    
+
     cave
 }
 
@@ -56,13 +61,14 @@ pub fn add_cave_floor(rocks_path: &Path, cave: &mut Vec<Vec<CavePoint>>) {
         .iter()
         .map(|instr| {
             parse_coords_set(instr)
-            .iter()
-            .map(|(i, _j)| i.clone() )
-            .collect::<Vec<usize>>()
+                .iter()
+                .map(|(i, _j)| i.clone())
+                .collect::<Vec<usize>>()
         })
         .flatten()
         .max()
-        .unwrap() + 2;
+        .unwrap()
+        + 2;
 
     println!("Adding floor at level {}", floor_level);
 
@@ -85,12 +91,11 @@ mod tests {
         let abyss_level = 999_usize;
         let mut abyss_reached = false;
         let mut n_sand_rest = 0_usize;
-        
-        while !abyss_reached{
+
+        while !abyss_reached {
             let mut sand_coord = start_point.clone();
 
             loop {
-
                 if sand_coord.0 >= abyss_level {
                     abyss_reached = true;
                     break;
@@ -118,12 +123,11 @@ mod tests {
                 cave[sand_coord.0][sand_coord.1] = CavePoint::Sand;
                 n_sand_rest += 1;
                 break;
-
             }
             println!("{}", n_sand_rest);
         }
 
-        // 1068 is the correct answer accordin to AOC. 
+        // 1068 is the correct answer accordin to AOC.
         assert_eq!(n_sand_rest, 1068);
     }
 
@@ -136,12 +140,11 @@ mod tests {
         let end_coord = start_point;
         let mut start_reached = false;
         let mut n_sand_rest = 0_usize;
-        
-        while !start_reached{
+
+        while !start_reached {
             let mut sand_coord = start_point.clone();
 
             loop {
-
                 let down = (sand_coord.0 + 1, sand_coord.1);
                 if cave[down.0][down.1] == CavePoint::Air {
                     sand_coord = down;
@@ -171,7 +174,7 @@ mod tests {
             }
         }
 
-        // 1068 is the correct answer accordin to AOC. 
+        // 1068 is the correct answer accordin to AOC.
         assert_eq!(n_sand_rest, 27936);
     }
 }
