@@ -294,7 +294,7 @@ mod tests {
         let start_coords = grid.coords_at_elevation(0);
         let end_coord = vec![grid.end_coord()];
 
-        let route_lengths: Vec<usize> = start_coords.iter().map(|start| {
+        let route_lengths: Vec<usize> = start_coords.par_iter().map(|start| {
             match find_path_with_a_star(&grid, &start, end_coord.clone()) {
                 Some(vec) => vec.len(),
                 None => usize::MAX
@@ -302,6 +302,6 @@ mod tests {
         }).collect();
         let shortest_route = route_lengths.into_iter().fold(usize::MAX, |accum, val| accum.min(val) );
 
-        assert_eq!(shortest_route, 29);
+        assert_eq!(shortest_route, 512);
     }
 }
