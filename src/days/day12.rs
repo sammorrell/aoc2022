@@ -170,6 +170,7 @@ pub fn can_step(curr_coord: &Coord, next_coord: &Coord, grid: &Grid) -> bool {
 pub fn find_path_with_a_star(grid: &Grid, start: &Coord, end: Vec<Coord>) -> Option<Vec<Coord>> {
     let mut frontier: Vec<Rc<Node>> = vec![];
     let mut came_from: Vec<Rc<Node>> = vec![];
+    let mut visited: Vec<Coord> = vec![];
 
     // Push the starting point onto the closed list to begin. 
     let start_node = Node::new(None, start);
@@ -220,7 +221,8 @@ pub fn find_path_with_a_star(grid: &Grid, start: &Coord, end: Vec<Coord>) -> Opt
 
         for neighbour in neighbours {
             // Check to see if we have already visisted this neighbour in our journey. 
-            if came_from.contains(&neighbour) { continue; }
+            if visited.contains(&neighbour.coord) { continue; }
+            visited.push(neighbour.coord.clone());
             
             for point in frontier.iter() {
                 // Check to see if there is a lower cost alternative alreadt in the frontier. 
@@ -255,7 +257,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
     pub fn day12_part1() {
         let grid = Grid::from_string(include_str!("../../data/day12/data.txt"));
         let start_coord = grid.start_coord();
